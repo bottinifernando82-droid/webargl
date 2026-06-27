@@ -61,35 +61,50 @@
     </div>
 
     <script>
-        const CLIENT_ID = '1520239558590074981'; // <--- PEGA AQUÍ TU ID
-        const REDIRECT_URI = window.location.origin + window.location.pathname;
+    const CLIENT_ID = '1520239558590074981';
+    const REDIRECT_URI = window.location.origin + window.location.pathname;
 
-        // Configurar botón
-        document.getElementById('login-btn').href = `https://discord.com/oauth2/authorize?client_id=1520239558590074981&response_type=code&redirect_uri=https%3A%2F%2Fbottinifernando82-droid.github.io%2Fwebargl&scope=identify+connections`;
+    document.getElementById('login-btn').href = `https://discord.com/oauth2/authorize?client_id=1520239558590074981&response_type=code&redirect_uri=https%3A%2F%2Fbottinifernando82-droid.github.io%2Fwebargl&scope=identify+connections`;
 
-        // Al cargar, verificar si volvemos con token
-        window.onload = () => {
-            const fragment = new URLSearchParams(window.location.hash.slice(1));
-            const accessToken = fragment.get('access_token');
+    window.onload = () => {
+        // 1. Intentar capturar token nuevo de la URL
+        const fragment = new URLSearchParams(window.location.hash.slice(1));
+        const accessToken = fragment.get('access_token');
 
-            if (accessToken) {
+        if (accessToken) {
+            // Guardar en localStorage para que no se pierda al recargar
+            localStorage.setItem('discord_token', accessToken);
+            // Limpiar la URL para que no quede el token expuesto
+            window.history.replaceState(null, null, ' ');
+        }
+
+        // 2. Comprobar si ya existe una sesión guardada
+        const savedToken = localStorage.getItem('discord_token');
+
+        if (savedToken) {
+            verificarSesion(savedToken);
+        }
+    };
+
+    function verificarSesion(token) {
+        fetch('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => {
+            if (res.status === 401) { // Token expirado o inválido
+                localStorage.removeItem('discord_token');
+                location.reload();
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.username) {
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('voting-view').style.display = 'block';
-                
-                // Obtener datos del usuario
-                fetch('https://discord.com/api/users/@me', {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('user-welcome').innerText = "Bienvenido, " + data.username;
-                });
+                document.getElementById('user-welcome').innerText = "Bienvenido, " + data.username;
             }
-        };
-
-        function votar(boss) {
-            alert("Voto registrado para " + boss + ". ¡Gracias, Guardián!");
-        }
-    </script>
+        });
+    }
+</script>
 </body>
 </html>
