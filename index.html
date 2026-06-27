@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <title>Gremio | Votación Raidboss</title>
+    <style>
+        :root {
+            --azul-acero: #2c3e50;
+            --oro-antiguo: #c5a059;
+            --gris-tormentoso: #1a1d23;
+            --luz-celestial: #e0f7fa;
+        }
+
+        body { background-color: var(--gris-tormentoso); color: var(--luz-celestial); font-family: 'Open Sans', sans-serif; margin: 0; min-height: 100vh; }
+
+        /* VISTA LOGIN */
+        #login-view { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .btn-discord { background: #5865F2; color: white; padding: 1rem 2rem; border: none; cursor: pointer; text-decoration: none; font-size: 1.2rem; font-family: 'Cinzel', serif; transition: 0.3s; }
+        .btn-discord:hover { background: #4752c4; }
+
+        /* VISTA VOTACIÓN */
+        #voting-view { display: none; }
+        header { width: 100%; padding: 3rem 0; text-align: center; border-bottom: 2px solid var(--oro-antiguo); background: linear-gradient(to bottom, var(--azul-acero), var(--gris-tormentoso)); }
+        h1 { font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: 4px; }
+        .container { width: 90%; max-width: 800px; margin: 3rem auto; }
+        .boss-card { background: rgba(44, 62, 80, 0.4); border: 1px solid var(--oro-antiguo); padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .vote-button { background: transparent; color: var(--oro-antiguo); border: 1px solid var(--oro-antiguo); padding: 0.6rem 1.2rem; cursor: pointer; font-family: 'Cinzel', serif; }
+        .vote-button:hover { background: var(--oro-antiguo); color: var(--gris-tormentoso); }
+    </style>
+</head>
+<body>
+
+    <div id="login-view">
+        <h1 style="color: var(--oro-antiguo);">Acceso al Gremio</h1>
+        <p>Throne and Liberty - Portal de Votación</p>
+        <a id="login-btn" class="btn-discord">IDENTIFICARSE CON DISCORD</a>
+    </div>
+
+    <div id="voting-view">
+        <header>
+            <h1>Selección de Raidboss</h1>
+            <p id="user-welcome"></p>
+        </header>
+
+        <div class="container">
+            <div class="boss-card">
+                <h3>Tevent</h3>
+                <button class="vote-button" onclick="votar('Tevent')">VOTAR</button>
+            </div>
+            <div class="boss-card">
+                <h3>Chernobog</h3>
+                <button class="vote-button" onclick="votar('Chernobog')">VOTAR</button>
+            </div>
+            <div class="boss-card">
+                <h3>Queen Bellandir</h3>
+                <button class="vote-button" onclick="votar('Bellandir')">VOTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CLIENT_ID = '1520239558590074981'; // <--- PEGA AQUÍ TU ID
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+        // Configurar botón
+        document.getElementById('login-btn').href = `https://discord.com/oauth2/authorize?client_id=1520239558590074981&response_type=code&redirect_uri=https%3A%2F%2Fkkh7io7t1m38.explorer.wasmer.app%2F%3Faction%3Dfile%26file%3Dindex.html&scope=identify`;
+
+        // Al cargar, verificar si volvemos con token
+        window.onload = () => {
+            const fragment = new URLSearchParams(window.location.hash.slice(1));
+            const accessToken = fragment.get('access_token');
+
+            if (accessToken) {
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('voting-view').style.display = 'block';
+                
+                // Obtener datos del usuario
+                fetch('https://discord.com/api/users/@me', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('user-welcome').innerText = "Bienvenido, " + data.username;
+                });
+            }
+        };
+
+        function votar(boss) {
+            alert("Voto registrado para " + boss + ". ¡Gracias, Guardián!");
+        }
+    </script>
+</body>
+</html>
