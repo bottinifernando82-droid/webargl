@@ -61,50 +61,50 @@
     </div>
 
     <script>
-    const CLIENT_ID = '1520239558590074981';
+    const CLIENT_ID = '1520239558590074981'; 
     const REDIRECT_URI = window.location.origin + window.location.pathname;
 
+    // Configuración del botón
     document.getElementById('login-btn').href = `https://discord.com/oauth2/authorize?client_id=1520239558590074981&response_type=code&redirect_uri=https%3A%2F%2Fbottinifernando82-droid.github.io%2Fwebargl&scope=identify+connections`;
 
-    window.onload = () => {
-        // 1. Intentar capturar token nuevo de la URL
-        const fragment = new URLSearchParams(window.location.hash.slice(1));
-        const accessToken = fragment.get('access_token');
+    // FUNCIÓN DE VERIFICACIÓN
+    async function verificarYMostrar() {
+        // 1. ¿Hay token en la URL? (Acabamos de volver de Discord)
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const tokenEnUrl = params.get('access_token');
 
-        if (accessToken) {
-            // Guardar en localStorage para que no se pierda al recargar
-            localStorage.setItem('discord_token', accessToken);
-            // Limpiar la URL para que no quede el token expuesto
-            window.history.replaceState(null, null, ' ');
+        if (tokenEnUrl) {
+            localStorage.setItem('discord_token', tokenEnUrl);
+            window.location.hash = ''; // Limpiamos la URL
         }
 
-        // 2. Comprobar si ya existe una sesión guardada
-        const savedToken = localStorage.getItem('discord_token');
+        // 2. ¿Tenemos token guardado?
+        const token = localStorage.getItem('discord_token');
 
-        if (savedToken) {
-            verificarSesion(savedToken);
+        if (token) {
+            try {
+                const response = await fetch('https://discord.com/api/users/@me', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('voting-view').style.display = 'block';
+                    document.getElementById('user-welcome').innerText = "Bienvenido, Guardián " + data.username;
+                } else {
+                    // Si el token es inválido, limpiamos y dejamos en login
+                    localStorage.removeItem('discord_token');
+                }
+            } catch (e) {
+                console.error("Error conectando con Discord:", e);
+            }
         }
-    };
-
-    function verificarSesion(token) {
-        fetch('https://discord.com/api/users/@me', {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-        .then(res => {
-            if (res.status === 401) { // Token expirado o inválido
-                localStorage.removeItem('discord_token');
-                location.reload();
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data.username) {
-                document.getElementById('login-view').style.display = 'none';
-                document.getElementById('voting-view').style.display = 'block';
-                document.getElementById('user-welcome').innerText = "Bienvenido, " + data.username;
-            }
-        });
     }
+
+    // Ejecutar al cargar
+    verificarYMostrar();
 </script>
 </body>
 </html>
